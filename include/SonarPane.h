@@ -3,10 +3,10 @@
 
 #include "pi_common.h"
 
-#ifdef __WXMAC__
-#include <GLUT/glut.h>
+#if defined(__WXOSX__)
+#include <OpenGL/glu.h>
 #else
-#include <GL/glut.h>
+#include <GL/glu.h>
 #endif
 #include <wx/glcanvas.h>
 
