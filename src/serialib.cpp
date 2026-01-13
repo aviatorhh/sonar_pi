@@ -244,7 +244,7 @@ char serialib::openDevice(const char *Device, const unsigned int Bauds,
 
     // Open device
     fd = open(Device, O_RDWR | O_NOCTTY | O_NDELAY);
-    // If the device is not open, return -1
+    // If the device is not open, return -2
     if (fd == -1) return -2;
     // Open the device in nonblocking mode
     fcntl(fd, F_SETFL, FNDELAY);
@@ -460,13 +460,11 @@ int serialib::writeString(const char *receivedString)
      \return 1 success
      \return -1 error while writting data
   */
-int serialib::writeBytes(const void *Buffer, const unsigned int NbBytes)
+int serialib::writeBytes(const void *Buffer, const unsigned int NbBytes, unsigned int *NbBytesWritten)
 {
 #if defined (_WIN32) || defined( _WIN64)
-    // Number of bytes written
-    DWORD dwBytesWritten;
-    // Write data
-    if(!WriteFile(hSerial, Buffer, NbBytes, &dwBytesWritten, NULL))
+    // Write data:
+    if(!WriteFile(hSerial, Buffer, NbBytes, (LPDWORD)NbBytesWritten, NULL))
         // Error while writing, return -1
         return -1;
     // Write operation successfull
@@ -474,13 +472,18 @@ int serialib::writeBytes(const void *Buffer, const unsigned int NbBytes)
 #endif
 #if defined (__linux__) || defined(__APPLE__)
     // Write data
-    if (write (fd,Buffer,NbBytes)!=(ssize_t)NbBytes) return -1;
+    *NbBytesWritten = write (fd,Buffer,NbBytes);
+    if (*NbBytesWritten !=(ssize_t)NbBytes) return -1;
     // Write operation successfull
     return 1;
 #endif
 }
 
-
+int serialib::writeBytes(const void *Buffer, const unsigned int NbBytes)
+{
+    unsigned int NbBytesWritten;
+    return writeBytes(Buffer, NbBytes, &NbBytesWritten);
+}
 
 /*!
      \brief Wait for a byte from the serial device and return the data read
@@ -731,6 +734,7 @@ int serialib::readBytes (void *buffer,unsigned int maxNbBytes,unsigned int timeO
 
 /*!
     \brief Empty receiver buffer
+    Note that when using serial over USB on Unix systems, a delay of 20ms may be necessary before calling the flushReceiver function
     \return If the function succeeds, the return value is nonzero.
             If the function fails, the return value is zero.
 */
@@ -832,7 +836,7 @@ bool serialib::clearDTR()
 {
 #if defined (_WIN32) || defined(_WIN64)
     // Clear DTR
-    currentStateDTR=true;
+    currentStateDTR=false;
     return EscapeCommFunction(hSerial,CLRDTR);
 #endif
 #if defined (__linux__) || defined(__APPLE__)
@@ -877,7 +881,7 @@ bool serialib::setRTS()
 {
 #if defined (_WIN32) || defined(_WIN64)
     // Set RTS
-    currentStateRTS=false;
+    currentStateRTS=true;
     return EscapeCommFunction(hSerial,SETRTS);
 #endif
 #if defined (__linux__) || defined(__APPLE__)
@@ -1096,16 +1100,16 @@ unsigned long int timeOut::elapsedTime_ms()
     // Current time
     LARGE_INTEGER CurrentTime;
     // Number of ticks since last call
-    unsigned long sec;
+    int sec;
 
     // Get current time
     QueryPerformanceCounter(&CurrentTime);
 
     // Compute the number of ticks elapsed since last call
-    sec=static_cast<unsigned long>(CurrentTime.QuadPart-previousTime);
+    sec=CurrentTime.QuadPart-previousTime;
 
     // Return the elapsed time in milliseconds
-    return static_cast<unsigned long>(sec/(counterFrequency/1000));
+    return sec/(counterFrequency/1000);
 #else
     // Current time
     struct timeval CurrentTime;
