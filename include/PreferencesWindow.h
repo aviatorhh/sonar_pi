@@ -48,7 +48,7 @@ class PreferencesWindow : public wxDialog {
 
         wxColour GetBackgroundColour();
         wxString GetDataInterfaceDefinition();
-        uint8_t  GetFrequency();
+        // uint8_t  GetFrequency();
         wxString GetIPAddressDefinition();
         uint16_t GetIPPortDefinition();
         bool     GetNMEAEnable();
@@ -64,7 +64,7 @@ class PreferencesWindow : public wxDialog {
         void SetDataInterfaceDefinition(wxString data_interface);
         void SetIPPortDefinition(uint16_t ip_port);
         void SetBackgroundColour(wxColour background_colour);
-        void SetFrequency(uint8_t frequency);
+        // void SetFrequency(uint8_t frequency);
         void SetSensorOffst(float offset);
         void SetNMEAID(wxString id);
         void SetNMEAType(int type);
@@ -91,7 +91,7 @@ class PreferencesWindow : public wxDialog {
         wxBoxSizer* sz_top_row;
         wxTextCtrl* m_tc_ip_address;
         wxTextCtrl* m_tc_ip_port;
-        wxSlider*   m_slider;
+        // wxSlider*   m_slider;
         wxCheckBox* m_cb_nmea_enable;
 
         wxCheckBox*     m_cb_provide_multicast;
@@ -108,6 +108,7 @@ class PreferencesWindow : public wxDialog {
         
         void OnIDTextTyped(wxCommandEvent& event);
         void OnIPTyped(wxCommandEvent& event);
+        void OnOffsetTyped(wxCommandEvent& event);
         void OnButtonOkClick(wxCommandEvent& event);
         void OnRadioBoxChange(wxCommandEvent& event);
         void OnSelectColour(wxColourPickerEvent& event);

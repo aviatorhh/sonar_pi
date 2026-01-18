@@ -65,7 +65,7 @@ public:
     wxString m_data_interface;
     int m_ip_port;
     bool m_serial_port_open;
-    int m_sonar_frequency;
+    // int m_sonar_frequency;
     float m_sensor_offset;
 
     SonarDisplayWindow *sonarDisplayWindow;

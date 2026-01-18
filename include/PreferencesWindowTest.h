@@ -63,7 +63,7 @@ class PreferencesWindow : public wxDialog {
         void SetDataInterfaceDefinition(wxString data_interface);
         void SetIPPortDefinition(uint16_t ip_port);
         void SetBackgroundColour(wxColour background_colour);
-        void SetFrequency(uint8_t frequency);
+        // void SetFrequency(uint8_t frequency);
         void SetSensorOffst(float offset);
         void SetNMEAID(wxString id);
         void SetNMEAType(int type);

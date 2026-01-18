@@ -45,13 +45,18 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
         char device_name[64];
         // Prepare the port name (Windows)
         #if defined (_WIN32) || defined( _WIN64)
-            sprintf (device_name,"\\\\.\\COM%d",i);
+            sprintf (device_name, "\\\\.\\COM%d",i);
         #endif
 
         // Prepare the port name (Linux)
         #ifdef __linux__
             //TODO: find a more elegant solution. Remember, the device path can be entered manually later.
-            sprintf (device_name,"/dev/ttyS%d",i-1);
+            sprintf (device_name, "/dev/ttyS%d",i-1);
+        #endif
+
+        // Prepare the port name (MacOS)
+        #ifdef __APPLE__
+            sprintf (device_name, "/dev/tty.usbserial-%d",i);
         #endif
 
         // try to connect to the device
@@ -73,7 +78,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     selection->Add("Serial Interface");
     selection->Add("Network (UDP)");
     m_rb_receiver  = new wxRadioBox(this, wxID_ANY, _T("Data Receiver Channel"), wxPoint(0, 0), wxDefaultSize, *selection, 1, wxRA_SPECIFY_COLS); 
-    
+    m_rb_receiver->SetToolTip("Select the data interface to receive sonar data from.");
   
     sz_top_row->Add(m_rb_receiver, 0, wxEXPAND | wxLEFT | wxTOP | wxRIGHT, 10);
     m_sz_main->Add(sz_top_row, 0, wxEXPAND);
@@ -93,6 +98,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     wxStaticText* st_ser_port = new wxStaticText(m_pnl_details_serial, -1, wxT("Serial Port:"));
     sz_ser_port->Add(st_ser_port, 0, wxALIGN_CENTER_VERTICAL);
     m_box = new wxComboBox(m_pnl_details_serial, wxID_ANY, _T(""), wxDefaultPosition, wxDefaultSize, m_arrItems, wxTE_PROCESS_ENTER | wxTE_PROCESS_TAB);
+    m_box->SetToolTip("Select the serial port to which the sonar device is connected. Type if not listed.");
     sz_ser_port->Add(m_box, 1);
     // Provide Multicast
     //wxBoxSizer* sz_serial_multicast     = new wxBoxSizer(wxHORIZONTAL);
@@ -157,6 +163,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     tc_t->Hide();
     wxSize sz = tc_t->GetSizeFromTextSize(tc_t->GetTextExtent("WW").x);
     m_tc_id = new wxTextCtrl(this, ID_TYPE, ID_NMEA, wxDefaultPosition, sz, wxTE_CENTRE, IDValidator());
+    m_tc_id->SetToolTip("Two letter NMEA sentence identifier.");
     m_tc_id->SetMaxLength(2);
     
 
@@ -172,11 +179,12 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
 
     // offset
     m_st_offset = new wxStaticText(this, wxID_ANY, "Offset:");
-    wxSize sz_o = tc_t->GetSizeFromTextSize(tc_t->GetTextExtent("-99.9").x);
-    m_tc_offset = new wxTextCtrl(this, wxID_ANY, "0.0", wxDefaultPosition, sz_o, wxTE_CENTRE);
+    wxSize sz_o = tc_t->GetSizeFromTextSize(tc_t->GetTextExtent("-99.99").x);
+    m_tc_offset = new wxTextCtrl(this, wxID_ANY, "0.00", wxDefaultPosition, sz_o, wxTE_CENTRE);
     m_tc_offset->SetMaxLength(5);
     m_st_offset->Hide();
     m_tc_offset->Hide();
+    m_tc_offset->SetToolTip("Sensor offset in meters added to depth reading in DPT sentence. Use negative values to have distance from keel shown.");
     sz_nmea->Add(m_st_offset , 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
     sz_nmea->Add(m_tc_offset , 0, wxALIGN_CENTER_VERTICAL | wxLEFT, 5);
     tc_t->Destroy();
@@ -188,6 +196,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     
     m_sz_main->Add(sz_nmea, 0, wxEXPAND);
     m_cb_nmea_enable = new wxCheckBox(this, wxID_ANY, "Enable NMEA sentence provisioning");
+    m_cb_nmea_enable->SetToolTip("Enable sending NMEA sentences with depth information to OpenCPN.");
     m_sz_main->Add(m_cb_nmea_enable, 0, wxLEFT | wxEXPAND | wxRIGHT, 5);
 
     m_sz_main->Add(new wxStaticLine(this), 0, wxEXPAND | wxALL, 10);
@@ -195,18 +204,18 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     // *********************************************
     // * Miscell                                   *
     // *********************************************
-    wxStaticText* st_miscell_head = new wxStaticText(this, -1, wxT("Sensor Setting"));
-    st_miscell_head->SetFont(boldFont);
-    m_sz_main->Add(st_miscell_head, 0, wxEXPAND | wxALIGN_LEFT | wxLEFT | wxRIGHT, 10);
-    wxBoxSizer* sz_miscell      = new wxBoxSizer(wxHORIZONTAL);
-    wxStaticText* st_slider = new wxStaticText(this, wxID_ANY, wxT("Freq. (kHz):"));
-    m_slider = new wxSlider(this, wxID_ANY, 150, 100, 250, wxDefaultPosition, wxDefaultSize, wxSL_LABELS);
-    m_slider->SetTick(10);
-    m_slider->SetTickFreq(10);
-    sz_miscell->Add(st_slider, 0, wxALIGN_CENTER_VERTICAL);
-    sz_miscell->Add(m_slider, 1, wxALIGN_CENTER_VERTICAL);
-    m_sz_main->Add(sz_miscell, 0, wxEXPAND | wxALIGN_LEFT | wxLEFT | wxRIGHT, 10);
-    m_sz_main->Add(new wxStaticLine(this), 0, wxEXPAND | wxALL, 10);
+    // wxStaticText* st_miscell_head = new wxStaticText(this, -1, wxT("Sensor Setting"));
+    // st_miscell_head->SetFont(boldFont);
+    // m_sz_main->Add(st_miscell_head, 0, wxEXPAND | wxALIGN_LEFT | wxLEFT | wxRIGHT, 10);
+    // wxBoxSizer* sz_miscell      = new wxBoxSizer(wxHORIZONTAL);
+    // wxStaticText* st_slider = new wxStaticText(this, wxID_ANY, wxT("Freq. (kHz):"));
+    // m_slider = new wxSlider(this, wxID_ANY, 150, 100, 250, wxDefaultPosition, wxDefaultSize, wxSL_LABELS);
+    // m_slider->SetTick(10);
+    // m_slider->SetTickFreq(10);
+    // sz_miscell->Add(st_slider, 0, wxALIGN_CENTER_VERTICAL);
+    // sz_miscell->Add(m_slider, 1, wxALIGN_CENTER_VERTICAL);
+    // m_sz_main->Add(sz_miscell, 0, wxEXPAND | wxALIGN_LEFT | wxLEFT | wxRIGHT, 10);
+    // m_sz_main->Add(new wxStaticLine(this), 0, wxEXPAND | wxALL, 10);
     
     // *********************************************
     // * Styles                                    *
@@ -220,6 +229,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     wxStaticText* t_label5 = new wxStaticText(this, -1, wxT("Background (Water) Colour:"));
 
     m_cpc = new wxColourPickerCtrl(this, wxID_ANY, *wxBLUE, wxDefaultPosition, wxDefaultSize, 0, wxDefaultValidator, _T(""));
+    m_cpc->SetToolTip("Select the background color representing the water.");
     sz_styles_color->Add(t_label5, 3, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL);
     sz_styles_color->Add(m_cpc, 1);
     
@@ -252,6 +262,7 @@ PreferencesWindow::PreferencesWindow(wxWindow* w_parent, const wxString& title) 
     m_tc_id         ->Bind(wxEVT_TEXT, &PreferencesWindow::OnIDTextTyped, this);
     m_tc_id         ->Bind(wxEVT_KILL_FOCUS, &PreferencesWindow::OnTextFocusLost, this);
     m_cb_nmea       ->Bind(wxEVT_COMBOBOX, &PreferencesWindow::OnDxTSelect, this);
+    m_tc_offset     ->Bind(wxEVT_TEXT, &PreferencesWindow::OnOffsetTyped, this);
 }
 
 void PreferencesWindow::OnTextFocusLost(wxFocusEvent& event) {
@@ -320,6 +331,10 @@ void PreferencesWindow::OnIDTextTyped(wxCommandEvent& event) {
     
 }
 
+void PreferencesWindow::OnOffsetTyped(wxCommandEvent& event) {
+    UpdateNMEASentence();
+}
+
 /**
  * 
 */
@@ -375,7 +390,8 @@ void PreferencesWindow::UpdateNMEASentence() {
     if (m_cb_nmea->GetValue() == ID_DPT_STR) {
         double dval;
         m_tc_offset->GetValue().ToDouble(&dval);
-        m_st_result->SetLabelText(wxString::Format(_T(" = $%s%s,%.1f,%.1f"), m_tc_id->GetValue(), m_cb_nmea->GetValue(), 0.0, dval));
+        m_sensor_offset = static_cast<float>(dval);
+        m_st_result->SetLabelText(wxString::Format(_T(" = $%s%s,%.1f,%.2f"), m_tc_id->GetValue(), m_cb_nmea->GetValue(), 0.0, m_sensor_offset));
     } else {
         m_st_result->SetLabelText(wxString::Format(_T(" = $%s%s,%.1f,f,%.1f,M,%.1f,F"), m_tc_id->GetValue(), m_cb_nmea->GetValue(), 0.0, 0.0, 0.0));
     }
@@ -502,13 +518,13 @@ void PreferencesWindow::SetSerialSendMulticast(bool serial_send_multicast) {
     m_cb_provide_multicast->SetValue(serial_send_multicast);
 }
 
-uint8_t PreferencesWindow::GetFrequency() {
-    return m_slider->GetValue();
-}
+// uint8_t PreferencesWindow::GetFrequency() {
+//     return m_slider->GetValue();
+// }
 
-void PreferencesWindow::SetFrequency(uint8_t frequency) {
-    m_slider->SetValue(frequency);
-}
+// void PreferencesWindow::SetFrequency(uint8_t frequency) {
+//     m_slider->SetValue(frequency);
+// }
 
 float PreferencesWindow::GetSensorOffset() {
     return m_sensor_offset;

@@ -98,7 +98,7 @@ int sonar_pi::Init() {
    
     sonarDisplayWindow = new SonarDisplayWindow(GetOCPNCanvasWindow(), _T("Sonar Display"), this, m_aui_mgr);
     sonarDisplayWindow->SetDisplayMode(m_display_mode);
-    sonarDisplayWindow->SetFrequency(m_sonar_frequency);
+    // sonarDisplayWindow->SetFrequency(m_sonar_frequency);
 
     
     sonarDisplayWindow->StartDataReceiver(true);
@@ -134,7 +134,7 @@ void sonar_pi::SetOpenGLMode(OpenGLMode mode) {
 }
 bool sonar_pi::DeInit() {
     m_display_mode      = sonarDisplayWindow->GetDisplayMode();
-    m_sonar_frequency   = sonarDisplayWindow->GetFrequency();
+    // m_sonar_frequency   = sonarDisplayWindow->GetFrequency();
 
     sonarDisplayWindow->StopDataReceiver();
     sonarDisplayWindow->Close();
@@ -198,7 +198,7 @@ void sonar_pi::ShowPreferencesDialog(wxWindow* _parent) {
     preferencesWindow->SetIPPortDefinition(m_ip_port);
     preferencesWindow->SetBackgroundColour(m_background_colour);
     preferencesWindow->SetSerialSendMulticast(m_serial_send_multicast);
-    preferencesWindow->SetFrequency(sonarDisplayWindow->GetFrequency());
+    // preferencesWindow->SetFrequency(sonarDisplayWindow->GetFrequency());
     preferencesWindow->SetSensorOffst(m_sensor_offset);
     preferencesWindow->SetNMEAID(m_nmea_id);
     preferencesWindow->SetNMEAType(m_nmea_type);
@@ -217,8 +217,8 @@ void sonar_pi::ShowPreferencesDialog(wxWindow* _parent) {
         m_ip_port               = preferencesWindow->GetIPPortDefinition();
         m_background_colour     = preferencesWindow->GetBackgroundColour();
         m_serial_send_multicast = preferencesWindow->GetSerialSendMulticast();
-        m_sonar_frequency       = preferencesWindow->GetFrequency();
-        sonarDisplayWindow      ->SetFrequency(m_sonar_frequency);
+        // m_sonar_frequency       = preferencesWindow->GetFrequency();
+        // sonarDisplayWindow      ->SetFrequency(m_sonar_frequency);
         m_sensor_offset         = preferencesWindow->GetSensorOffset();
         m_nmea_type             = preferencesWindow->GetNMEAType();
         m_nmea_id               = preferencesWindow->GetNMEAID();
@@ -264,7 +264,7 @@ void sonar_pi::SendNMEABuffer(float depth) {
             sentence = wxString::Format(_T("%sDBT,%.1f,f,%.1f,M,0.0,F"), m_nmea_id, m2ft(depth), depth);
             break;
         case ID_DPT:
-            sentence = wxString::Format(_T("%sDPT,%0.1f,%.1f"), m_nmea_id, depth, m_sensor_offset);
+            sentence = wxString::Format(_T("%sDPT,%0.1f,%.2f"), m_nmea_id, depth, m_sensor_offset);
             break;
         default:
             return;
@@ -317,12 +317,13 @@ bool sonar_pi::LoadConfig(void) {
         m_background_colour = *wxBLACK;
     }
     p_conf->Read(_T( "serial_send_multicast" ), &m_serial_send_multicast, false);
-    p_conf->Read(_T( "sonar_frequency" ), &m_sonar_frequency, DEFAULT_FREQUENCY);
+    // p_conf->Read(_T( "sonar_frequency" ), &m_sonar_frequency, DEFAULT_FREQUENCY);
     p_conf->Read(_T( "sensor_offset" ), &m_sensor_offset, 0.0);
     p_conf->Read(_T( "display_mode" ), &m_display_mode, MULTICOLOR);
     p_conf->Read(_T( "nmea_type" ), &m_nmea_type, ID_DBT);
     p_conf->Read(_T( "nmea_id" ), &m_nmea_id, ID_NMEA);
     p_conf->Read(_T( "nmea_enable" ), &m_nmea_enable, false);
+    p_conf->Read(_T( "sensor_offset" ), &m_sensor_offset, 0.0);
 
     
     return true;
@@ -342,11 +343,12 @@ bool sonar_pi::SaveConfig(void) {
         p_conf->Write(_T ( "ip_port" ), m_ip_port);
         p_conf->Write(_T ( "background_colour" ), m_background_colour.GetAsString(wxC2S_HTML_SYNTAX));
         p_conf->Write(_T ( "serial_send_multicast" ), m_serial_send_multicast);
-        p_conf->Write(_T ( "sonar_frequency" ), m_sonar_frequency);
+        // p_conf->Write(_T ( "sonar_frequency" ), m_sonar_frequency);
         p_conf->Write(_T ( "display_mode" ), m_display_mode);
         p_conf->Write(_T ( "nmea_type" ), m_nmea_type);
         p_conf->Write(_T ( "nmea_id" ), m_nmea_id);
         p_conf->Write(_T ( "nmea_enable" ), m_nmea_enable);
+        p_conf->Write(_T ( "sensor_offset" ), m_sensor_offset);
 
 
         return true;
