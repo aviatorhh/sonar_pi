@@ -21,7 +21,7 @@
 // Number of ADC samples to take per measurement cycle
 // Each sample takes approximately 13.2 microseconds
 // This value must match the number of samples expected by the Python visualization tool
-#define NUM_SAMPLES 600	// MUST BE AN EVEN NUMBER
+#define NUM_SAMPLES 400	// MUST BE AN EVEN NUMBER
 uint32_t num_samples = NUM_SAMPLES; // for future use
 
 // Threshold level for detecting the bottom echo
