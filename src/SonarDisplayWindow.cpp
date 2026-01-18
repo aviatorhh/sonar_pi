@@ -19,21 +19,22 @@
  * You should have received a copy of the GNU General Public License
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
  ******************************************************************************/
-#include "sonar_pi.h"
-
-#include <wx/aui/framemanager.h>
-#include <wx/aui/dockart.h>
-
-#include <algorithm>
-#include <stdlib.h>
-#include <time.h>
-#include "SonarPane.h"
 #include "SonarDisplayWindow.h"
 
+#include <stdlib.h>
+#include <time.h>
+#include <wx/aui/dockart.h>
+#include <wx/aui/framemanager.h>
+
+#include <algorithm>
+
+#include "SonarPane.h"
+#include "sonar_pi.h"
+
 #define ID_DETACH 1
-#define ID_PREFS  2
+#define ID_PREFS 2
 #define ID_SHOW_BAR 3
-#define ID_HIDE_BAR  4
+#define ID_HIDE_BAR 4
 
 PLUGIN_BEGIN_NAMESPACE
 enum { TIMER_ID = 1 };
@@ -41,86 +42,90 @@ enum { TIMER_ID = 1 };
 wxDEFINE_EVENT(NEW_DATA_TYPE, wxCommandEvent);
 wxDEFINE_EVENT(NEW_DEPTH_TYPE, wxCommandEvent);
 
-
 BEGIN_EVENT_TABLE(SonarDisplayWindow, wxPanel)
-    //EVT_BUTTON(wxID_CLOSE, SonarDisplayWindow::OnClose)
-    EVT_CLOSE(SonarDisplayWindow::OnClose)
-    EVT_TIMER(TIMER_ID, SonarDisplayWindow::OnTimer)
-    EVT_TOGGLEBUTTON(wxID_ANY, SonarDisplayWindow::OnBtnMonochrome)
-    EVT_CONTEXT_MENU(SonarDisplayWindow::OnContextMenu)
-    EVT_MENU(wxID_ANY, SonarDisplayWindow::OnContextMenuSelect)
-    EVT_LEFT_DOWN(SonarDisplayWindow::OnLeftClick)
+// EVT_BUTTON(wxID_CLOSE, SonarDisplayWindow::OnClose)
+EVT_CLOSE(SonarDisplayWindow::OnClose)
+EVT_TIMER(TIMER_ID, SonarDisplayWindow::OnTimer)
+EVT_TOGGLEBUTTON(wxID_ANY, SonarDisplayWindow::OnBtnMonochrome)
+EVT_CONTEXT_MENU(SonarDisplayWindow::OnContextMenu)
+EVT_MENU(wxID_ANY, SonarDisplayWindow::OnContextMenuSelect)
+EVT_LEFT_DOWN(SonarDisplayWindow::OnLeftClick)
 END_EVENT_TABLE()
 
-    SonarDisplayWindow::SonarDisplayWindow(wxWindow* w_parent, const wxString& title, sonar_pi* sp, wxAuiManager* aui_mgr)
+SonarDisplayWindow::SonarDisplayWindow(wxWindow* w_parent, const wxString& title, sonar_pi* sp, wxAuiManager* aui_mgr)
     : wxPanel(w_parent, wxID_ANY, wxDefaultPosition, wxDefaultSize, wxTAB_TRAVERSAL, wxEmptyString) {
-    m_pi            = sp;
-    m_aui_mgr       = aui_mgr;
-    m_menu_docked   = nullptr;
+    m_pi = sp;
+    m_aui_mgr = aui_mgr;
+    m_menu_docked = nullptr;
     m_menu_floating = nullptr;
-    m_depth_avail   = false;
-    m_frequency     = m_pi->m_sonar_frequency;
-    m_display_mode  = MULTICOLOR;
-    
-    
+    m_depth_avail = false;
+    // m_frequency = m_pi->m_sonar_frequency;
+    m_display_mode = MULTICOLOR;
+
     m_sizer = new wxBoxSizer(wxVERTICAL);
+    wxBoxSizer* sizer_head_data = new wxBoxSizer(wxHORIZONTAL);
     t_label1 = new wxStaticText(this, wxID_ANY, wxT("0.00kn (0.0m)"));
+    m_lbl_depth = new wxStaticText(this, wxID_ANY, wxT("Sonar Depth: 0.0m"), wxDefaultPosition, wxDefaultSize, wxALIGN_RIGHT);
 
     // Control Panel
-    m_st_slider = new wxStaticText(this, wxID_ANY, wxT("Freq. (kHz):"));
-    m_slider = new wxSlider(this, wxID_ANY, 150, 100, 250, wxDefaultPosition, wxDefaultSize, wxSL_LABELS);
-    m_slider->SetTick(10);
-    m_slider->SetTickFreq(10);
-    
+    // m_st_slider = new wxStaticText(this, wxID_ANY, wxT("Gain:"));
+    // m_slider = new wxSlider(this, wxID_ANY, 32, 1, 255, wxDefaultPosition, wxDefaultSize, wxSL_LABELS);
+    // m_slider->SetTick(10);
+    // m_slider->SetTickFreq(10);
+
     m_cp_sizer = new wxBoxSizer(wxHORIZONTAL);
-    //m_btnOCLOSE = new wxButton(this, wxID_CLOSE, wxT("close"));
+    // m_btnOCLOSE = new wxButton(this, wxID_CLOSE, wxT("close"));
 
     m_tgl_monochrome = new wxToggleButton(this, wxID_ANY, wxT("Monochrome"));
 
-    m_cp_sizer->Add(m_st_slider, 0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxLEFT | wxBOTTOM | wxTOP, 5);
-    m_cp_sizer->Add(m_slider, 1, wxALIGN_CENTER_VERTICAL | wxBOTTOM | wxTOP, 5);
-    m_cp_sizer->Add(m_tgl_monochrome, 0, wxALIGN_RIGHT | wxALIGN_CENTER_VERTICAL | wxRIGHT | wxBOTTOM | wxTOP, 5);
+    // m_cp_sizer->Add(m_st_slider, 0, wxALIGN_LEFT | wxALIGN_CENTER_VERTICAL | wxLEFT | wxBOTTOM | wxTOP, 5);
+    // m_cp_sizer->Add(m_slider, 1, wxALIGN_CENTER_VERTICAL | wxBOTTOM | wxTOP, 5);
+    m_cp_sizer->Add(m_tgl_monochrome, 0, wxALIGN_CENTER_VERTICAL | wxLEFT | wxRIGHT | wxBOTTOM | wxTOP, 5);
 
-    m_sizer->Add(t_label1, 0, wxALIGN_CENTRE_VERTICAL | wxEXPAND);
+    sizer_head_data->Add(t_label1, 1,  wxLEFT | wxEXPAND, 5);
+    sizer_head_data->Add(m_lbl_depth, 1,  wxRIGHT | wxEXPAND, 5);
+
+
+    m_sizer->Add(sizer_head_data, 0, wxEXPAND | wxALIGN_CENTER_HORIZONTAL | wxTOP | wxBOTTOM, 5);
     dummy = new wxPanel(this);
     wxStaticText* lbl_dummy = new wxStaticText(dummy, wxID_ANY, wxT("OpenGL is not enabled. No sonar data will be displayed. Depth information may be availabe."));
     wxBoxSizer* szr = new wxBoxSizer(wxVERTICAL);
     szr->Add(lbl_dummy, 0, wxEXPAND | wxALIGN_CENTER_HORIZONTAL);
     dummy->SetSizer(szr);
     m_sizer->Add(dummy, 1, wxEXPAND | wxALIGN_CENTER_HORIZONTAL);
-    
+
     m_sizer->Add(m_cp_sizer, 0, wxEXPAND | wxALIGN_RIGHT | wxALIGN_BOTTOM);
+    SetBackgroundColour(wxColour(240, 240, 240));
     SetSizer(m_sizer);
 
-    //DimeWindow(this);
+    // DimeWindow(this);
     Fit();
     Layout();
 
     wxString name = wxString::Format(wxT("SONAR v%d.%d.%d-%s"), PLUGIN_VERSION_MAJOR, PLUGIN_VERSION_MINOR, PLUGIN_VERSION_PATCH, PLUGIN_VERSION_TWEAK);
-    
+
     // Let the AUI manager know our panel
     wxAuiPaneInfo pane_info = wxAuiPaneInfo()
-                        .Name(name)
-                        .Caption(name)
-                        .CaptionVisible(true)
-                        .Movable(true)
-                        .TopDockable(false)
-                        .BottomDockable(true)
-                        .LeftDockable(false)
-                        .RightDockable(true)
-                        .CloseButton(true)
-                        .Centre()
-                        .MinSize(wxSize(140, 180))
-                        .FloatingSize(wxSize(420, 240))
-                        .Float()
+                                  .Name(name)
+                                  .Caption(name)
+                                  .CaptionVisible(true)
+                                  .Movable(true)
+                                  .TopDockable(false)
+                                  .BottomDockable(true)
+                                  .LeftDockable(false)
+                                  .RightDockable(true)
+                                  .CloseButton(true)
+                                  .Centre()
+                                  .MinSize(wxSize(140, 180))
+                                  .FloatingSize(wxSize(420, 240))
+                                  .Float()
 #ifndef __WXMAC__
-                        .Hide()
+                                  .Hide()
 #endif
-                        .Dockable(true);
-    
+                                  .Dockable(true);
+
     m_aui_mgr->AddPane(this, pane_info);
     m_aui_mgr->Update();
-
 
     // Instantiate whether or not OpenGL available, so it can take the data upon data receiver start.
     sopa = new SonarPane(this);
@@ -133,93 +138,79 @@ END_EVENT_TABLE()
     // We have to attach it here after initialization (and not EVT table)
     Bind(wxEVT_SIZE, &SonarDisplayWindow::OnSize, this);
 
-    m_slider->Bind(wxEVT_SCROLL_CHANGED, &SonarDisplayWindow::OnSliderRelease, this);
-    
+    // m_slider->Bind(wxEVT_SCROLL_CHANGED, &SonarDisplayWindow::OnSliderRelease, this);
 }
 
-
-void SonarDisplayWindow::OnSliderRelease(wxScrollEvent& event) {
-    StopDataReceiver();
-    m_frequency = event.GetInt();
-    StartDataReceiver(false);
-}
+// void SonarDisplayWindow::OnSliderRelease(wxScrollEvent& event) {
+// StopDataReceiver();
+// m_frequency = event.GetInt();
+// sopa->SetGain(event.GetInt());
+// StartDataReceiver(false);
+// }
 void SonarDisplayWindow::FrameClosed(wxAuiManagerEvent& event) {
     m_pi->closing();
 }
 
 void SonarDisplayWindow::OnLeftClick(wxMouseEvent& event) {
-        wxAuiPaneInfo &p = m_aui_mgr->GetPane(this);
+    wxAuiPaneInfo& p = m_aui_mgr->GetPane(this);
 
     if (p.IsDocked()) {
         if (!m_menu_docked) {
             m_menu_docked = new wxMenu;
             m_menu_docked->Append(ID_DETACH, wxT("Undock"));
-            
-            
+
             m_menu_docked->Append(ID_HIDE_BAR, wxT("Hide Bar"));
-        
+
             m_menu_docked->Append(ID_SHOW_BAR, wxT("Show Bar"));
             m_menu_docked->AppendSeparator();
             m_menu_docked->Append(ID_PREFS, wxT("Preferences"));
-            
         }
         PopupMenu(m_menu_docked);
     } else {
         if (!m_menu_floating) {
             m_menu_floating = new wxMenu;
-            
-            
+
             m_menu_floating->Append(ID_HIDE_BAR, wxT("Hide Bar"));
-        
+
             m_menu_floating->Append(ID_SHOW_BAR, wxT("Show Bar"));
             m_menu_floating->AppendSeparator();
             m_menu_floating->Append(ID_PREFS, wxT("Preferences"));
         }
         PopupMenu(m_menu_floating);
     }
-
 }
 
 void SonarDisplayWindow::OnContextMenu(wxContextMenuEvent& event) {
-
-    wxAuiPaneInfo &p = m_aui_mgr->GetPane(this);
+    wxAuiPaneInfo& p = m_aui_mgr->GetPane(this);
 
     if (p.IsDocked()) {
         if (!m_menu_docked) {
             m_menu_docked = new wxMenu;
             m_menu_docked->Append(ID_DETACH, wxT("Undock"));
-            
-            
+
             m_menu_docked->Append(ID_HIDE_BAR, wxT("Hide Bar"));
-        
+
             m_menu_docked->Append(ID_SHOW_BAR, wxT("Show Bar"));
             m_menu_docked->AppendSeparator();
             m_menu_docked->Append(ID_PREFS, wxT("Preferences"));
-           
         }
         PopupMenu(m_menu_docked);
     } else {
         if (!m_menu_floating) {
             m_menu_floating = new wxMenu;
-            
-            
-            
-                m_menu_floating->Append(ID_HIDE_BAR, wxT("Hide Bar"));
-            
-                m_menu_floating->Append(ID_SHOW_BAR, wxT("Show Bar"));
-                m_menu_floating->AppendSeparator();
-                m_menu_floating->Append(ID_PREFS, wxT("Preferences"));
-            
+
+            m_menu_floating->Append(ID_HIDE_BAR, wxT("Hide Bar"));
+
+            m_menu_floating->Append(ID_SHOW_BAR, wxT("Show Bar"));
+            m_menu_floating->AppendSeparator();
+            m_menu_floating->Append(ID_PREFS, wxT("Preferences"));
         }
         PopupMenu(m_menu_floating);
     }
-
-   
 }
 void SonarDisplayWindow::OnContextMenuSelect(wxCommandEvent& event) {
-
-    wxAuiPaneInfo &p = m_aui_mgr->GetPane(this);
-    switch(event.GetId()) {
+    wxAuiPaneInfo& p = m_aui_mgr->GetPane(this);
+    switch (event.GetId()) {
         case ID_DETACH:
             p.Float().CaptionVisible(true);
             m_aui_mgr->Update();
@@ -238,12 +229,11 @@ void SonarDisplayWindow::OnContextMenuSelect(wxCommandEvent& event) {
     }
 }
 void SonarDisplayWindow::ShowFrame() {
-
-    if (m_pi->IsOpenGLEnabled()) {    
+    if (m_pi->IsOpenGLEnabled()) {
         GetSizer()->Replace(dummy, sopa);
+        dummy->Hide();
     }
-    wxAuiPaneInfo &p = m_aui_mgr->GetPane(this);
-    
+    wxAuiPaneInfo& p = m_aui_mgr->GetPane(this);
 
     if (p.IsDocked()) {
         p.CaptionVisible(false);
@@ -253,25 +243,24 @@ void SonarDisplayWindow::ShowFrame() {
 
     p.Show();
     m_aui_mgr->Update();
-    
+
     Layout();
-    
 }
 
 void SonarDisplayWindow::HideFrame() {
-    wxAuiPaneInfo &p = m_aui_mgr->GetPane(this);
+    wxAuiPaneInfo& p = m_aui_mgr->GetPane(this);
     p.Hide();
     m_aui_mgr->Update();
-    if (m_pi->IsOpenGLEnabled()) {    
+    if (m_pi->IsOpenGLEnabled()) {
         GetSizer()->Replace(sopa, dummy);
+        dummy->Hide();
     }
 }
 
 void SonarDisplayWindow::OnSize(wxSizeEvent& event) {
+    wxAuiPaneInfo& p = m_aui_mgr->GetPane(this);
 
-    wxAuiPaneInfo &p = m_aui_mgr->GetPane(this);
-
-    int width = event.GetSize().x;
+    // int width = event.GetSize().x;
 
     bool is_docked = p.IsDocked();
     if (is_docked != m_docked) {
@@ -281,19 +270,19 @@ void SonarDisplayWindow::OnSize(wxSizeEvent& event) {
         p.Show();
     }
 
-    if (width < 400) {
-        m_st_slider->Hide();
-    } 
-    if (width < 300) {
-        m_slider->Hide();
-    }
-    if (width >= 400) {
-        m_st_slider->Show();
-    }
-    if (width >= 300) {
-        m_slider->Show();
-    }
-    
+    // if (width < 400) {
+    //     m_st_slider->Hide();
+    // }
+    // if (width < 300) {
+    //     m_slider->Hide();
+    // }
+    // if (width >= 400) {
+    //     m_st_slider->Show();
+    // }
+    // if (width >= 300) {
+    //     m_slider->Show();
+    // }
+
     event.Skip();
 }
 
@@ -303,6 +292,7 @@ void SonarDisplayWindow::OnBtnMonochrome(wxCommandEvent& event) {
     } else {
         m_display_mode = MULTICOLOR;
     }
+    sopa->initColorMap();
 }
 
 SonarDisplayWindow::~SonarDisplayWindow() {
@@ -315,13 +305,13 @@ SonarDisplayWindow::~SonarDisplayWindow() {
 bool SonarDisplayWindow::StartDataReceiver(bool clear) {
     Bind(NEW_DATA_TYPE, &SonarDisplayWindow::NewSonarData, this);
     Bind(NEW_DEPTH_TYPE, &SonarDisplayWindow::NewDepthData, this);
-    
-    if (clear) {
-        index           = BUF_X;
-        m_depth_value   = 0;
-        m_depth         = 0;
 
-        sopa->ResetDataBuffer();    // clear the screen
+    if (clear) {
+        index = BUF_X;
+        m_depth_value = 0;
+        m_depth = 0;
+
+        sopa->ResetDataBuffer();  // clear the screen
     }
     // startup a data provider
     if (m_pi->m_data_interface == MODE_NET) {
@@ -332,7 +322,7 @@ bool SonarDisplayWindow::StartDataReceiver(bool clear) {
         return false;
     }
 
-    m_data_receiver->SetFrequency(m_frequency);
+    // m_data_receiver->SetFrequency(m_frequency);
 
     // let the receiver setup itself
     m_data_receiver->Startup();
@@ -360,7 +350,6 @@ void SonarDisplayWindow::StopDataReceiver() {
             LOG("Can't delete the thread!");
         delete m_data_receiver;
         while (1) {
-
             wxCriticalSectionLocker enter(m_pThreadCS);
             if (!m_data_receiver) {
                 break;
@@ -377,7 +366,7 @@ void SonarDisplayWindow::StopDataReceiver() {
 void SonarDisplayWindow::SetSpeed(double kn) {
     m_speed = kn;
     wxString str;
-    str.Printf(_T("%.2fkn (%.1fm)\n"), kn, kn2ms(kn) * (BUF_X / 10.0));
+    str.Printf(_T("%.2fkn (%.1fm)"), kn, kn2ms(kn) * (BUF_X / 10.0));
     t_label1->SetLabelText(str);
 }
 
@@ -399,28 +388,34 @@ void SonarDisplayWindow::NewDepthData(wxCommandEvent& evt) {
     if (m_depth_avail) {
         m_pi->SendNMEABuffer(m_depth);
         m_depth_avail = false;
+
+        wxString str;
+        str.Printf(_T("Sonar Depth: %.1fm"), m_depth);
+        m_lbl_depth->SetLabelText(str);
     }
 }
 void SonarDisplayWindow::NewSonarData(wxCommandEvent& evt) {
-  
     msgbuf = m_data_receiver->GetData();
-    if (m_depth_value == 0) return;
+    if (m_depth_value == 0) {
+        return;
+    }
+
     if (index) {
+        // As long as the buffer is not full, fill it up
         index--;
         memcpy(sopa->data_buffer[index], msgbuf, sizeof(sopa->data_buffer[index]));
         m_depths[index] = m_depth_value;
     } else {
-        for (int i = BUF_X - 1; i > 0; i--) {
-            memcpy(sopa->data_buffer[i], sopa->data_buffer[i - 1], DATA_WIDTH);
-        }
+        // Buffer full, shift data and add new entry at the start
+        memmove(sopa->data_buffer + 1, sopa->data_buffer, (BUF_X - 1) * (NUM_SAMPLES + HEADER_SIZE));
         memcpy(sopa->data_buffer[0], msgbuf, sizeof(sopa->data_buffer[0]));
         std::rotate(std::begin(m_depths), std::end(m_depths) - 1, std::end(m_depths));
         m_depths[0] = m_depth_value;
     }
 
-    int t = 0;
-    for (int i = 0; i < BUF_X; i++) {
-        t = std::max(t, (int)m_depths[i]);
+    uint16_t t = 0;
+    for (uint16_t i = 0; i < BUF_X; i++) {
+        t = std::max(t, m_depths[i]);
     }
     m_depth_max = t;
 
@@ -436,13 +431,13 @@ void SonarDisplayWindow::SetDisplayMode(int _display_mode) {
     m_tgl_monochrome->SetValue(m_display_mode == MONOCHROME);
 }
 
-uint8_t SonarDisplayWindow::GetFrequency() {
-    return m_frequency;
-}
+// uint8_t SonarDisplayWindow::GetFrequency() {
+//     return m_frequency;
+// }
 
-void SonarDisplayWindow::SetFrequency(uint8_t frequency) {
-    m_slider->SetValue(frequency);
-    m_frequency = frequency;
-}
+// void SonarDisplayWindow::SetFrequency(uint8_t frequency) {
+//     m_slider->SetValue(frequency);
+//     m_frequency = frequency;
+// }
 
 PLUGIN_END_NAMESPACE

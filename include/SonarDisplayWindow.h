@@ -14,9 +14,8 @@
 #include "UDPDataReceiver.h"
 #include "SerialDataReceiver.h"
 
-#define BUF_X 600
-#define DATA_WIDTH 50
-#define DATA_SIZE BUF_X * (DATA_WIDTH+1)
+#define BUF_X 300
+#define DATA_SIZE BUF_X * (NUM_SAMPLES+1)
 #define ID_DEPTH 201
 #define ID_SONAR 202
 
@@ -41,9 +40,10 @@ class SonarDisplayWindow : public wxPanel {
         sonar_pi* m_pi;
 
         wxStaticText *t_label1;
+        wxStaticText *m_lbl_depth;
         uint16_t index;
         float m_depth;
-        char* msgbuf;
+        uint8_t* msgbuf;
         uint16_t m_depth_max;
         uint16_t m_depths[BUF_X] = {{0}}; 
         int m_display_mode;
@@ -57,18 +57,18 @@ class SonarDisplayWindow : public wxPanel {
         void FrameClosed(wxAuiManagerEvent& event);
         int GetDisplayMode();
         void SetDisplayMode(int display_mode);
-        void SetFrequency(uint8_t frequency);
-        uint8_t GetFrequency();
+        // void SetFrequency(uint8_t frequency);
+        // uint8_t GetFrequency();
 
    private:
         SonarPane *sopa;
         struct timespec begin, end;
         bool m_depth_avail;
-        wxUint8 m_frequency;
-        wxStaticText* m_st_slider;
+        // wxUint8 m_frequency;
+        // wxStaticText* m_st_slider;
         int m_depth_value;
         wxAuiManager* m_aui_mgr;
-        wxSlider* m_slider;
+        // wxSlider* m_slider;
         wxTimer* m_timer;
         //wxButton *m_btnOCLOSE;
         wxMenu* m_menu_docked;
@@ -79,11 +79,10 @@ class SonarDisplayWindow : public wxPanel {
         bool m_docked;
         wxBoxSizer* m_cp_sizer;
         wxBoxSizer* m_sizer;
-
         void OnContextMenu(wxContextMenuEvent& event);
         void OnContextMenuSelect(wxCommandEvent& event);
         void OnLeftClick(wxMouseEvent& event);
-        void OnSliderRelease(wxScrollEvent& event);
+        // void OnSliderRelease(wxScrollEvent& event);
         void OnClose(wxCloseEvent& event);
         //void OnClose(wxCommandEvent& event);
         void OnSize( wxSizeEvent& event );
