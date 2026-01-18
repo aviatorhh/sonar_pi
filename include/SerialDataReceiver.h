@@ -22,19 +22,20 @@ class SerialDataReceiver: public IDataReceiver {
 
         void Startup();
         void Shutdown();
-        char* GetData();
+        uint8_t* GetData();
         virtual ExitCode Entry();
-        void SetFrequency(uint8_t frequency);
+        // void SetFrequency(uint8_t frequency);
 
     private:
         SonarDisplayWindow* m_app;
         serialib serial;
-        char buf[50];
+        uint8_t buf[NUM_SAMPLES + HEADER_SIZE];
+        int8_t divider;
         int m_fd;
         struct sockaddr_in addr;
         int addrlen;
         bool m_running;
-        uint8_t m_frequency;
+        // uint8_t m_frequency;
 
         void parse_message(uint8_t* buf);
 

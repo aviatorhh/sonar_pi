@@ -39,8 +39,8 @@ class UDPDataReceiver : public IDataReceiver {
         virtual ExitCode Entry();
         void Shutdown();
         void Startup();
-        char* GetData();
-        void SetFrequency(wxUint8 frequency);
+        uint8_t* GetData();
+        // void SetFrequency(wxUint8 frequency);
 
     private:
         SonarDisplayWindow* m_app;
@@ -50,9 +50,9 @@ class UDPDataReceiver : public IDataReceiver {
         bool m_has_addr;
         struct sockaddr_in addr;
         int fd;
-        char buf[50];
+        uint8_t buf[NUM_SAMPLES + HEADER_SIZE];
         bool m_running;
-        uint8_t m_frequency;
+        // uint8_t m_frequency;
         
         void SendCommand(char cmd);
         void parse_message(uint8_t* msgbuf);
